@@ -20,14 +20,12 @@ public class SimpleParserTest {
 
 	
 	//To make it easy to print objects and turn this output on and off
-	static final boolean doPrint = true;
+	static final boolean doPrint = false;
 	private void show(Object input) {
 		if (doPrint) {
 			System.out.println(input.toString());
 		}
 	}
-
-
 
 	/**
 	 * Simple test case with an empty program.  This test 
@@ -54,6 +52,296 @@ public class SimpleParserTest {
 		}
 	}
 
+	@Test
+	public void program01() throws LexicalException, SyntaxException {
+		String input = "myProgam";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		try {
+			parser.parse();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void program02() throws LexicalException, SyntaxException {
+		String input = "$1__myProg__;";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		thrown.expect(SyntaxException.class);
+		try {
+			parser.parse();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void program03() throws LexicalException, SyntaxException {
+		String input = "; $1__myProg__";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		thrown.expect(SyntaxException.class);
+		try {
+			parser.parse();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void variableDeclaration01() throws LexicalException, SyntaxException {
+		String[] valid = new String[] {"int ident1;"};
+		for (String input : valid) {
+			Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+			try {
+				parser.variableDeclaration();  //Parse the program
+			}
+			catch (SyntaxException e) {
+				show(e);
+				throw e;
+			}
+		}
+	}
+	@Test
+	public void variableDeclaration02() throws LexicalException, SyntaxException {
+		String input = "boolean ident1";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		try {
+			parser.variableDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	@Test
+	public void variableDeclaration03() throws LexicalException, SyntaxException {
+		String input = "int int";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		thrown.expect(SyntaxException.class);
+		try {
+			parser.variableDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	@Test
+	public void variableDeclaration04() throws LexicalException, SyntaxException {
+		String input = "boolean x";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		thrown.expect(SyntaxException.class);
+		try {
+			parser.variableDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void variableDeclaration05() throws LexicalException, SyntaxException {
+		String input = "int ident1 = 5";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		try {
+			parser.variableDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void imageDeclaration01() throws LexicalException, SyntaxException {
+		String input = "image [1,5] ident1 <- \"stringliteral\"";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		try {
+			parser.imageDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+
+	@Test
+	public void imageDeclaration02() throws LexicalException, SyntaxException {
+		String input = "image [1,5] ident1 <- @100";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		try {
+			parser.imageDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void imageDeclaration03() throws LexicalException, SyntaxException {
+		String input = "image [1,5] ident1 <- ident2";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		try {
+			parser.imageDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void imageDeclaration04() throws LexicalException, SyntaxException {
+		String input = "image [1,5] ident1";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		try {
+			parser.imageDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void imageDeclaration05() throws LexicalException, SyntaxException {
+		String input = "image ident1 <- \"stringliteral\"";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		try {
+			parser.imageDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void imageDeclaration06() throws LexicalException, SyntaxException {
+		String input = "image ident1 <- @100";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		try {
+			parser.imageDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+
+	@Test
+	public void imageDeclaration07() throws LexicalException, SyntaxException {
+		String input = "image ident1 <- ident2";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		try {
+			parser.imageDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void imageDeclaration08() throws LexicalException, SyntaxException {
+		String input = "image ident1";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		try {
+			parser.imageDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void imageDeclaration09() throws LexicalException, SyntaxException {
+		String input = "image [1] ident1";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		thrown.expect(SyntaxException.class);
+		try {
+			parser.imageDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void imageDeclaration10() throws LexicalException, SyntaxException {
+		String input = "image 1,2 ident1";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		thrown.expect(SyntaxException.class);
+		try {
+			parser.imageDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	@Test
+	public void imageDeclaration11() throws LexicalException, SyntaxException {
+		String input = "image ident1 <-";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		thrown.expect(SyntaxException.class);
+		try {
+			parser.imageDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	
+	@Test
+	public void imageDeclaration12() throws LexicalException, SyntaxException {
+		String input = "image ident1 <- x";  //The input is the empty string.  This is not legal
+		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+		SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+		thrown.expect(SyntaxException.class);
+		try {
+			parser.imageDeclaration();  //Parse the program
+		}
+		catch (SyntaxException e) {
+			show(e);
+			throw e;
+		}
+	}
+	
+	
+	//---------------------------------------------------------------------
 	
 	/** Another example.  This is a legal program and should pass when 
 	 * your parser is implemented.
