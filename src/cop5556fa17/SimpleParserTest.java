@@ -453,12 +453,136 @@ public class SimpleParserTest {
 				"+++---+sin[10, 20]", "+++---+cos[sin(90), 20]", "+++---+atan[(10), (abs(45))]",
 				"+++---+ident [10,20]", "+++---+ident [sin(90), cos(90)]", "ident [sin(90), cos(90)]%ident", "ident [sin(90), cos(90)]%x", "DEF_Y%y", "DEF_Y%r", "DEF_Y%a",
 				"identif%X", "--identif%Y", "--identif%Z", "((((ident))))%A", "((((+ident))))%R", "-((((+ident))))%DEF_X", "-((((+10))))%DEF_Y",
-				"++sin(90)++sin(90)","+x-+y", "+x-+y > sin(10)", "true", "false", "+true", "-false"};
+				"++sin(90)++sin(90)","+x-+y", "+x-+y > sin(10)", "true", "false", "+true", "-false", "true == false",
+				"100 != 90", "5 * 2 + 4 / 4 % 3 > 40", "++-+-+-+-sin(cos(atan(abs(++true)))) & abs[true>x, y!=false]",
+				"true != false"};
 		for (String input : valid) {
 			Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
 			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
 			try {
 				parser.expression();  
+				parser.matchEOFs();
+			}
+			catch (SyntaxException e) {
+				System.out.println("Error parsing " + input);
+				show(e);
+				throw e;
+			}
+		}
+	}
+	
+	@Test
+	public void selector01() throws LexicalException, SyntaxException {
+		String[] valid = new String[] {"x,y", "r,a", "true, false", "-4,100",
+				"sin (true),cos(2+2)", "atan ((300)),abs(sin(true))",
+				"sin [(true),20] ,cos[(2+2), 2+2]", "atan[((300)), (1)], abs[(sin(true)), x]",
+				"cart_x[(true), ((A))] , cart_y[(100), polar_a(true)]", "polar_a[(true&true), -0],polar_r[(((2)+2)+2),---0]"
+				};
+		for (String input : valid) {
+			Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+			try {
+				parser.selector(); 
+				parser.matchEOFs();
+			}
+			catch (SyntaxException e) {
+				System.out.println("Error parsing " + input);
+				show(e);
+				throw e;
+			}
+		}
+	}
+	
+	@Test
+	public void xySelector01() throws LexicalException, SyntaxException {
+		String[] valid = new String[] {"x,y"};
+		for (String input : valid) {
+			Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+			try {
+				parser.xySelector();  
+			}
+			catch (SyntaxException e) {
+				System.out.println("Error parsing " + input);
+				show(e);
+				throw e;
+			}
+		}
+	}
+	
+	@Test
+	public void primary01() throws LexicalException, SyntaxException {
+		String[] valid = new String[] {"true", "false", "100", "0", "(true)","(100)","((x>y))",
+				"sin (true)", "cos(2+2)", "atan ((300))", "abs(sin(true))",
+				"cart_x(true)", "cart_y(100)", "polar_a(true&true)", "polar_r(((2)+2)+2)",
+				"sin [(true),20]", "cos[(2+2), 2+2]", "atan[((300)), (1)]", "abs[(sin(true)), x]",
+				"cart_x[(true), ((A))]", "cart_y[(100), polar_a(true)]", "polar_a[(true&true), -0]", "polar_r[(((2)+2)+2),---0]"};
+		for (String input : valid) {
+			Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+			try {
+				parser.primary();
+				parser.matchEOFs();
+			}
+			catch (SyntaxException e) {
+				System.out.println("Error parsing " + input);
+				show(e);
+				throw e;
+			}
+		}
+	}
+	
+	@Test
+	public void identOrPixelSelector01() throws LexicalException, SyntaxException {
+		String[] valid = new String[] {"identifier", "identifier [true, false]", 
+				"abc[sin (true),cos(2+2)]", "abc[atan ((300)),abs(sin(true))]",
+				"abc[sin [(true),20] ,cos[(2+2), 2+2]]", "abc[atan[((300)), (1)], abs[(sin(true)), x]]",
+				"abc[cart_x[(true), ((A))] , cart_y[(100), polar_a(true)]]", "abc[polar_a[(true&true), -0],polar_r[(((2)+2)+2),---0]]"};
+		for (String input : valid) {
+			Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+			try {
+				parser.identOrPixelSelectorExpression();
+				parser.matchEOFs();
+			}
+			catch (SyntaxException e) {
+				System.out.println("Error parsing " + input);
+				show(e);
+				throw e;
+			}
+		}
+	}
+	
+	@Test
+	public void function01() throws LexicalException, SyntaxException {
+		String[] valid = new String[] {"sin (true)", "cos(2+2)", "atan ((300))", "abs(sin(true))",
+										"cart_x(true)", "cart_y(100)", "polar_a(true&true)", "polar_r(((2)+2)+2)",
+										"sin [(true),20]", "cos[(2+2), 2+2]", "atan[((300)), (1)]", "abs[(sin(true)), x]",
+										"cart_x[(true), ((A))]", "cart_y[(100), polar_a(true)]", "polar_a[(true&true), -0]", "polar_r[(((2)+2)+2),---0]"};
+		
+		for (String input : valid) {
+			Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+			try {
+				parser.functionApplication();
+				parser.matchEOFs();
+			}
+			catch (SyntaxException e) {
+				System.out.println("Error parsing " + input);
+				show(e);
+				throw e;
+			}
+		}
+	}
+	
+	@Test
+	public void raSelector01() throws LexicalException, SyntaxException {
+		String[] valid = new String[] {"r,A"};
+		for (String input : valid) {
+			Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
+			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
+			try {
+				parser.raSelector();  
 			}
 			catch (SyntaxException e) {
 				System.out.println("Error parsing " + input);
