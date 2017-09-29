@@ -1,9 +1,7 @@
 package cop5556fa17;
 
-//import java.util.Arrays;
 import cop5556fa17.Scanner.Kind;
 import cop5556fa17.Scanner.Token;
-//import cop5556fa17.SimpleParser.SyntaxException;
 
 import static cop5556fa17.Scanner.Kind.*;
 
@@ -54,7 +52,7 @@ public class SimpleParser {
 		throw new SyntaxException(t, message);
 	}
 
-	void matchEOFs() throws SyntaxException {
+	void matchEOF_() throws SyntaxException {
 		if (t.kind == EOF) {
 			return;
 		}
@@ -221,10 +219,10 @@ public class SimpleParser {
 		switch(t.kind) {
 			case IDENTIFIER: //break;
 			case STRING_LITERAL: nextToken();
-			break;
+				 				 break;
 			case OP_AT: nextToken();
 						expression();
-			break;
+						break;
 			default: raiseException("source()\nExpected: A valid source entity\n" +
 			"Expected Token: IDENTIFIER / STRING_LITERAL / OP_AT\n");
 		}
@@ -306,6 +304,7 @@ public class SimpleParser {
 	 */
 	void lhsTail() throws SyntaxException {
 		if (next(Kind.LSQUARE)) {
+			nextToken();
 			lhsSelector();
 			checkKind(Kind.RSQUARE, "lhsTail()\nExpected: Closing brackets for selector\n");
 		}
@@ -391,6 +390,7 @@ public class SimpleParser {
 	void sink() throws SyntaxException {
 		if (!next(Kind.KW_SCREEN) && !next(Kind.IDENTIFIER))
 			raiseException("sink()\nExpected: Valid sink\nExpected Token: KW_SCREEN / IDENTIFIER\n");
+		nextToken();
 	}
 
 	//-------------------------------------------------------------------------

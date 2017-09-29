@@ -461,7 +461,7 @@ public class SimpleParserTest {
 			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
 			try {
 				parser.expression();  
-				parser.matchEOFs();
+				parser.matchEOF_();
 			}
 			catch (SyntaxException e) {
 				System.out.println("Error parsing " + input);
@@ -483,7 +483,7 @@ public class SimpleParserTest {
 			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
 			try {
 				parser.selector(); 
-				parser.matchEOFs();
+				parser.matchEOF_();
 			}
 			catch (SyntaxException e) {
 				System.out.println("Error parsing " + input);
@@ -522,7 +522,7 @@ public class SimpleParserTest {
 			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
 			try {
 				parser.primary();
-				parser.matchEOFs();
+				parser.matchEOF_();
 			}
 			catch (SyntaxException e) {
 				System.out.println("Error parsing " + input);
@@ -543,7 +543,7 @@ public class SimpleParserTest {
 			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
 			try {
 				parser.identOrPixelSelectorExpression();
-				parser.matchEOFs();
+				parser.matchEOF_();
 			}
 			catch (SyntaxException e) {
 				System.out.println("Error parsing " + input);
@@ -565,7 +565,7 @@ public class SimpleParserTest {
 			SimpleParser parser = new SimpleParser(scanner);  //Create a parser
 			try {
 				parser.functionApplication();
-				parser.matchEOFs();
+				parser.matchEOF_();
 			}
 			catch (SyntaxException e) {
 				System.out.println("Error parsing " + input);
