@@ -40,8 +40,8 @@ public class SimpleParser {
 	}
 
 	/**
-	 * Only for check at end of program. Does not "consume" EOF so no attempt to get
-	 * nonexistent next Token.
+	 * Only for check at end of program. Does not "consume" EOF so no attempt
+	 * to get nonexistent next Token.
 	 *
 	 * @return
 	 * @throws SyntaxException
@@ -54,6 +54,14 @@ public class SimpleParser {
 		throw new SyntaxException(t, message);
 	}
 
+	void matchEOFs() throws SyntaxException {
+		if (t.kind == EOF) {
+			return;
+		}
+		String message =  "Expected EOL at " + t.line + ":" + t.pos_in_line;
+		throw new SyntaxException(t, message);
+	}
+	
 	private void nextToken() {
 		t = scanner.nextToken();
 	}
@@ -67,15 +75,18 @@ public class SimpleParser {
 			raiseException(errorMsg + "Expected Token: " + type.toString() + "\n");
 		nextToken();
 	}
-		
+
 	private String errorLocation() {
-		return "Found " + t.kind.toString() + " ==> " + t.getText() + " at " + t.line + ":" + t.pos_in_line;
+		return "Found " + t.kind.toString() + " ==> " + t.getText() +
+			" at " + t.line + ":" + t.pos_in_line;
 	}
 
 	public void raiseException(String errorMsg) throws SyntaxException {
-		throw new SyntaxException(t, "SyntaxException\nParsing Error: " + errorMsg + errorLocation());
+		throw new SyntaxException(t, "SyntaxException\nParsing Error: " +
+			errorMsg + errorLocation());
 	}
-	//-----------------------------------------------------------------------
+	
+	//-------------------------------------------------------------------------
 
 	/**
 	 * Program ::=  IDENTIFIER   ( Declaration SEMI | Statement SEMI )*
@@ -95,14 +106,17 @@ public class SimpleParser {
 				break;
 				case IDENTIFIER: statement();
 				break;
-				default: raiseException("program()\nExpected: Start of a declaration / statement\nExpected Token: KW_int / KW_boolean / KW_image / KW_url / KW_file / IDENTIFIER\n");
+				default: raiseException("program()\nExpected: Start of a declaration" +
+				" / statement\nExpected Token: KW_int / KW_boolean / KW_image /" +
+				" KW_url / KW_file / IDENTIFIER\n");
 			}
-			checkKind(Kind.SEMI, "program()\nExpected: End of a declaration / statement\n");
+			checkKind(Kind.SEMI, "program()\nExpected: End of a declaration / " +
+			"statement\n");
 		}
 	}
 
-	//-----------------------------------------------------------------------
-
+	//-------------------------------------------------------------------------
+	
 	/**
 	 * Declaration ::= VariableDeclaration | ImageDeclaration | SourceSinkDeclaration
 	 *
@@ -118,11 +132,12 @@ public class SimpleParser {
 			case KW_url:
 			case KW_file:   sourceSinkDeclaration();
 			break;
-			default: raiseException("declaration()\nExpected: Start of declaration\nExpected Token: KW_int / KW_boolean / KW_image / KW_url / KW_file\n");
+			default: raiseException("declaration()\nExpected: Start of declaration" +
+			"\nExpected Token: KW_int / KW_boolean / KW_image / KW_url / KW_file\n");
 		}
 	}
 
-	//-----------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 
 	/**
 	 * VariableDeclaration  ::=  VarType IDENTIFIER ( OP_ASSIGN  Expression  | ε )
@@ -131,7 +146,8 @@ public class SimpleParser {
 	 */
 	void variableDeclaration() throws SyntaxException {
 		varType();
-		checkKind(Kind.IDENTIFIER, "variableDeclaration()\nExpected: Identifier being declared\n");
+		checkKind(Kind.IDENTIFIER, "variableDeclaration()\nExpected: Identifier " +
+		"being declared\n");
 		if (next(Kind.OP_ASSIGN)) {
 			nextToken();
 			expression();
@@ -145,12 +161,13 @@ public class SimpleParser {
 	 */
 	void varType() throws SyntaxException {
 		if (!next(Kind.KW_int) && !next(Kind.KW_boolean))
-			raiseException("varType()\nExpected: Start of variable declaration\nExpected Token: KW_int / KW_boolean\n");
+			raiseException("varType()\nExpected: Start of variable declaration\n" +
+			"Expected Token: KW_int / KW_boolean\n");
 		nextToken();
 	}
 
-	
-	//-----------------------------------------------------------------------
+
+	//-------------------------------------------------------------------------
 
 	/**
 	 * ImageDeclaration ::=  KW_image  Image_Param  IDENTIFIER Image_Assign
@@ -163,7 +180,7 @@ public class SimpleParser {
 		checkKind(Kind.IDENTIFIER, "checkKind()\nExpected: Identifier in image declaration\n");
 		imageAssign();
 	}
-	
+
 	/**
 	 * Image_Param ::= LSQUARE Expression COMMA Expression RSQUARE
 	 * Image_Param ::= ε
@@ -179,7 +196,7 @@ public class SimpleParser {
 			checkKind(Kind.RSQUARE, "imageParam()\nExpected: Closing bracket for image parameters\n");
 		}
 	}
-	
+
 	/**
 	 * Image_Assign ::= OP_LARROW Source
 	 * Image_Assign ::= ε
@@ -208,11 +225,12 @@ public class SimpleParser {
 			case OP_AT: nextToken();
 						expression();
 			break;
-			default: raiseException("source()\nExpected: A valid source entity\nExpected Token: IDENTIFIER / STRING_LITERAL / OP_AT\n");
+			default: raiseException("source()\nExpected: A valid source entity\n" +
+			"Expected Token: IDENTIFIER / STRING_LITERAL / OP_AT\n");
 		}
 	}
-	
-	//-----------------------------------------------------------------------
+
+	//-------------------------------------------------------------------------
 
 	/**
 	 * SourceSinkDeclaration ::= SourceSinkType IDENTIFIER  OP_ASSIGN  Source
@@ -225,7 +243,7 @@ public class SimpleParser {
 		checkKind(Kind.OP_ASSIGN, "sourceSinkDeclaration()\nExpected: Assignment operator\n");
 		source();
 	}
-	
+
 	/**
 	 * SourceSinkType := KW_url | KW_file
 	 *
@@ -236,8 +254,8 @@ public class SimpleParser {
 			raiseException("sourceSinkType()\nExpected: Valid source sink\nExpected Token: KW_url / KW_file \n");
 		nextToken();
 	}
-	
-	//-----------------------------------------------------------------------
+
+	//-------------------------------------------------------------------------
 
 	/**
 	 * Statement ::= IDENTIFIER STATEMENT_TAIL
@@ -248,7 +266,7 @@ public class SimpleParser {
 		checkKind(Kind.IDENTIFIER, "statement()\nExpected: Identifier at the start of statement\n");
 		statementTail();
 	}
-	
+
 	/**
 	 * Statement_Tail ::= AssignmentTail | ImageInTail | ImageOutTail
 	 *
@@ -263,10 +281,12 @@ public class SimpleParser {
 			break;
 			case OP_LARROW: imageInTail();
 			break;
-			default: raiseException("statementTail()\nExpected: Start of assignment tail / image in tail / image out tail\nExpected Token: OP_ASSIGN / LSQUARE / OP_RARROW / OP_LARROW\n");
+			default: raiseException("statementTail()\nExpected: Start of assignment" +
+			" tail / image in tail / image out tail\nExpected Token: OP_ASSIGN / " +
+			"LSQUARE / OP_RARROW / OP_LARROW\n");
 		}
 	}
-	
+
 	/**
 	 * AssignmentTail::= LhsTail OP_ASSIGN Expression
 	 *
@@ -314,7 +334,8 @@ public class SimpleParser {
 		break;
 		case KW_r: raSelector();
 		break;
-		default: raiseException("selectorBody()\nExpected: Start of xy / ra selector\nExpected Token: KW_x / KW_r\n");
+		default: raiseException("selectorBody()\nExpected: Start of xy / ra" +
+		" selector\nExpected Token: KW_x / KW_r\n");
 		}
 	}
 
@@ -340,7 +361,7 @@ public class SimpleParser {
 		checkKind(Kind.KW_A, "raSelector()\nExpected: End of ra selector\n");
 	}
 
-	//-----------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 
 	/**
 	 * ImageInTail ::=  OP_LARROW Source
@@ -363,7 +384,7 @@ public class SimpleParser {
 	}
 
 	/**
-	 * Sink ::= IDENTIFIER | KW_SCREEN 
+	 * Sink ::= IDENTIFIER | KW_SCREEN
 	 *
 	 * @throws SyntaxException
 	 */
@@ -372,7 +393,7 @@ public class SimpleParser {
 			raiseException("sink()\nExpected: Valid sink\nExpected Token: KW_SCREEN / IDENTIFIER\n");
 	}
 
-	//---------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 
 	/**
 	 * Expression ::=  OrExpression  OP_Q  Expression OP_COLON Expression    | OrExpression
@@ -399,7 +420,7 @@ public class SimpleParser {
 		checkKind(Kind.OP_COLON, "expressionTail()\nExpected: Separator inside ternary conditional\n");
 		expression();
 	}
-	
+
 	/**
 	 * OrExpression ::= AndExpression   (  OP_OR  AndExpression)*
 	 *
@@ -478,7 +499,7 @@ public class SimpleParser {
 		}
 	}
 
-	//---------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 
 	/**
 	 * UnaryExpression ::= OP_PLUS UnaryExpression | OP_MINUS UnaryExpression | UnaryExpressionNotPlusMinus
@@ -517,10 +538,14 @@ public class SimpleParser {
 			case KW_DEF_X:
 			case KW_DEF_Y: unaryExpressionNotPlusOrMinus();
 									break;
-			default: raiseException("unaryExpression()\nExpected: Start of unary expression\nExpected Token: OP_PLUS / OP_MINUS / OP_EXCL / INTEGER_LITERAL / LPAREN / KW_sin / KW_cos / KW_atan / KW_abs / KW_cart_x / KW_cart_y / KW_polar_a / KW_polar_r / IDENTIFIER / KW_x / KW_y / KW_r / KW_a / KW_X / KW_Y / KW_Z / KW_A / KW_R / KW_DEF_X / KW_DEF_Y / BOOLEAN_LITERAL\n");
+			default: raiseException("unaryExpression()\nExpected: Start of unary expression" +
+			"\nExpected Token: OP_PLUS / OP_MINUS / OP_EXCL / INTEGER_LITERAL /" +
+			" LPAREN / KW_sin / KW_cos / KW_atan / KW_abs / KW_cart_x / KW_cart_y /" +
+			" KW_polar_a / KW_polar_r / IDENTIFIER / KW_x / KW_y / KW_r / KW_a / " +
+			"KW_X / KW_Y / KW_Z / KW_A / KW_R / KW_DEF_X / KW_DEF_Y / BOOLEAN_LITERAL\n");
 		}
 	}
-	
+
 	/**
 	 * UnaryExpressionNotPlusMinus ::=  OP_EXCL  UnaryExpression  | Primary |
 	 *	  IdentOrPixelSelectorExpression | KW_x | KW_y | KW_r | KW_a | KW_X |
@@ -559,7 +584,12 @@ public class SimpleParser {
 			case KW_DEF_X:
 			case KW_DEF_Y:  nextToken();
 							break;
-			default: raiseException("unaryExpressionNotPlusOrMinus()\nExpected: Start of unaryExpressionNotPlusOrMinus\nExpected Token: OP_EXCL / INTEGER_LITERAL / LPAREN / KW_sin / KW_cos / KW_atan / KW_abs / KW_cart_x / KW_cart_y / KW_polar_a / KW_polar_r / IDENTIFIER / KW_x / KW_y / KW_r / KW_a / KW_X / KW_Y / KW_Z / KW_A / KW_R / KW_DEF_X / KW_DEF_Y / BOOLEAN_LITERAL\n");
+			default: raiseException("unaryExpressionNotPlusOrMinus()\nExpected: Start of" +
+			" unaryExpressionNotPlusOrMinus\nExpected Token: OP_EXCL / " +
+			"INTEGER_LITERAL / LPAREN / KW_sin / KW_cos / KW_atan / KW_abs / " +
+			"KW_cart_x / KW_cart_y / KW_polar_a / KW_polar_r / IDENTIFIER / KW_x /" +
+			" KW_y / KW_r / KW_a / KW_X / KW_Y / KW_Z / KW_A / KW_R / KW_DEF_X / " +
+			"KW_DEF_Y / BOOLEAN_LITERAL\n");
 		}
 	}
 
@@ -586,9 +616,13 @@ public class SimpleParser {
 			case KW_polar_a:
 			case KW_polar_r:  functionApplication();
 								break;
-			default: raiseException("primary()\nExpected: Start of primary\nExpected Token: INTEGER_LITERAL / LPAREN / KW_sin / KW_cos / KW_atan / KW_abs / KW_cart_x / KW_cart_y / KW_polar_a / KW_polar_r / BOOLEAN_LITERAL\n");
+			default: raiseException("primary()\nExpected: Start of primary\nExpected"+
+			" Token: INTEGER_LITERAL / LPAREN / KW_sin / KW_cos / KW_atan / KW_abs /"+
+			" KW_cart_x / KW_cart_y / KW_polar_a / KW_polar_r / BOOLEAN_LITERAL\n");
 		}
 	}
+
+	//-------------------------------------------------------------------------
 	
 	/**
 	 * IdentOrPixelSelectorExpression::=  IDENTIFIER LSQUARE Selector RSQUARE   | IDENTIFIER
@@ -641,10 +675,12 @@ public class SimpleParser {
 			case KW_polar_a:
 			case KW_polar_r: nextToken();
 							break;
-			default: raiseException("functionName()\nExpected: Start of function call\nExpected Token: KW_sin / KW_cos / KW_atan / KW_abs / KW_cart_x / KW_cart_y / KW_polar_a / KW_polar_r\n");
+			default: raiseException("functionName()\nExpected: Start of function " +
+			"call\nExpected Token: KW_sin / KW_cos / KW_atan / KW_abs / KW_cart_x /" +
+			" KW_cart_y / KW_polar_a / KW_polar_r\n");
 		}
 	}
-	
+
 	/**
 	 * FunctionTail ::= LPAREN Expression RPAREN
 	 * FunctionTail ::= LSQUARE Selector RSQUARE
