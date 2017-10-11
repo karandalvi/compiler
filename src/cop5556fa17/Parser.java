@@ -2,10 +2,12 @@ package cop5556fa17;
 
 import cop5556fa17.Scanner.Kind;
 import cop5556fa17.Scanner.Token;
+import java.util.Arrays;
+import cop5556fa17.Parser.SyntaxException;
 
 import static cop5556fa17.Scanner.Kind.*;
 
-public class SimpleParser {
+public class Parser {
 
 	@SuppressWarnings("serial")
 	public class SyntaxException extends Exception {
@@ -20,7 +22,7 @@ public class SimpleParser {
 	Scanner scanner;
 	Token t;
 
-	SimpleParser(Scanner scanner) {
+	Parser(Scanner scanner) {
 		this.scanner = scanner;
 		t = scanner.nextToken();
 	}
@@ -710,6 +712,22 @@ public class SimpleParser {
 		expression();
 		checkKind(Kind.COMMA, "selector()\nExpected: Comma inside selector\n");
 		expression();
+	}
+	
+	//Functions to facilitate testing
+	void assignment() throws SyntaxException {
+		checkKind(Kind.IDENTIFIER, "assignment()\nExpected: Identifier for assignment\n");
+		assignmentTail();
+	}
+	
+	void imageIn() throws SyntaxException {
+		checkKind(Kind.IDENTIFIER, "imageIn()\nExpected: Identifier for image in\n");
+		imageInTail();
+	}
+	
+	void imageOut() throws SyntaxException {
+		checkKind(Kind.IDENTIFIER, "imageOut()\nExpected: Identifier for image out\n");
+		imageOutTail();
 	}
 
 }

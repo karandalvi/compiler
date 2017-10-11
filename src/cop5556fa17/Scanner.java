@@ -117,7 +117,6 @@ public class Scanner {
 		private String chars2String(char[] chars, int pos, int length) {
 			StringBuilder sb = new StringBuilder();
 			for (int i = pos + 1; i < pos + length - 1; ++i) {// omit initial and final "
-//			for (int i = pos; i < pos + length; ++i) {// omit initial and final "
 				char ch = chars[i];
 				if (ch == '\\') { // handle escape
 					i++;
