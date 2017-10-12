@@ -2,11 +2,15 @@ package cop5556fa17;
 
 import cop5556fa17.Scanner.Kind;
 import cop5556fa17.Scanner.Token;
+
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+
 import cop5556fa17.Parser.SyntaxException;
 
 import static cop5556fa17.Scanner.Kind.*;
-
+import cop5556fa17.AST.*;
 public class Parser {
 
 	@SuppressWarnings("serial")
@@ -94,18 +98,21 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void program() throws SyntaxException {
+	Program program() throws SyntaxException {
+		Token name = t;
 		checkKind(Kind.IDENTIFIER, "program()\nExpected: Start of program\n");
+		ArrayList<ASTNode> decOrStat = new ArrayList<>();
+		
 		while (!next(Kind.EOF)) {
 			switch(t.kind) {
 				case KW_int:
 				case KW_boolean:
 				case KW_image:
 				case KW_url:
-				case KW_file: declaration();
-				break;
-				case IDENTIFIER: statement();
-				break;
+				case KW_file: decOrStat.add(declaration());
+							  break;
+				case IDENTIFIER: decOrStat.add(statement());
+								 break;
 				default: raiseException("program()\nExpected: Start of a declaration" +
 				" / statement\nExpected Token: KW_int / KW_boolean / KW_image /" +
 				" KW_url / KW_file / IDENTIFIER\n");
@@ -113,6 +120,7 @@ public class Parser {
 			checkKind(Kind.SEMI, "program()\nExpected: End of a declaration / " +
 			"statement\n");
 		}
+		return new Program(t, name, decOrStat);
 	}
 
 	//-------------------------------------------------------------------------
@@ -122,19 +130,17 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void declaration() throws SyntaxException {
+	Declaration declaration() throws SyntaxException {
 		switch (t.kind) {
 			case KW_int:
-			case KW_boolean: variableDeclaration();
-			break;
-			case KW_image:  imageDeclaration();
-			break;
+			case KW_boolean: return variableDeclaration();
+			case KW_image: return imageDeclaration();
 			case KW_url:
-			case KW_file:   sourceSinkDeclaration();
-			break;
+			case KW_file: return sourceSinkDeclaration();
 			default: raiseException("declaration()\nExpected: Start of declaration" +
 			"\nExpected Token: KW_int / KW_boolean / KW_image / KW_url / KW_file\n");
 		}
+		return null;
 	}
 
 	//-------------------------------------------------------------------------
@@ -144,14 +150,19 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void variableDeclaration() throws SyntaxException {
-		varType();
+	Declaration variableDeclaration() throws SyntaxException {
+		Token type = varType();
+		
+		Token identifier = t;
 		checkKind(Kind.IDENTIFIER, "variableDeclaration()\nExpected: Identifier " +
 		"being declared\n");
+		
+		Expression e = null;
 		if (next(Kind.OP_ASSIGN)) {
 			nextToken();
-			expression();
+			e = expression();
 		}
+		return new Declaration_Variable(t, type, identifier, e);
 	}
 
 	/**
@@ -159,11 +170,13 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void varType() throws SyntaxException {
+	Token varType() throws SyntaxException {
+		Token type = t;
 		if (!next(Kind.KW_int) && !next(Kind.KW_boolean))
 			raiseException("varType()\nExpected: Start of variable declaration\n" +
 			"Expected Token: KW_int / KW_boolean\n");
 		nextToken();
+		return t;
 	}
 
 
@@ -174,11 +187,13 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void imageDeclaration() throws SyntaxException {
+	Declaration imageDeclaration() throws SyntaxException {
 		checkKind(Kind.KW_image, "checkKind()\nExpected: Start of image declaration\n");
-		imageParam();
+		List<Expression> param = imageParam();
+		Token ident = t;
 		checkKind(Kind.IDENTIFIER, "checkKind()\nExpected: Identifier in image declaration\n");
-		imageAssign();
+		Source src = imageAssign(); //TODO: could be null
+		return new Declaration_Image(t, param.get(0), param.get(1), ident, src);
 	}
 
 	/**
@@ -187,14 +202,16 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void imageParam() throws SyntaxException {
+	List<Expression> imageParam() throws SyntaxException {
+		List<Expression> param = new ArrayList<>();
 		if (next(Kind.LSQUARE)) {
 			nextToken();
-			expression();
+			param.add(expression());
 			checkKind(Kind.COMMA, "imageParam()\nExpected: Comma between two expression\n");
-			expression();
+			param.add(expression());
 			checkKind(Kind.RSQUARE, "imageParam()\nExpected: Closing bracket for image parameters\n");
 		}
+		return param;
 	}
 
 	/**
@@ -203,11 +220,12 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void imageAssign() throws SyntaxException {
+	Source imageAssign() throws SyntaxException {
 		if (next(Kind.OP_LARROW)) {
 			nextToken();
-			source();
+			return source();
 		}
+		return null;
 	}
 
 	/**
@@ -217,17 +235,25 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void source() throws SyntaxException {
+	Source source() throws SyntaxException {
+		Source s = null;
 		switch(t.kind) {
-			case IDENTIFIER: //break;
-			case STRING_LITERAL: nextToken();
+			case IDENTIFIER: s = new Source_Ident(t, t);
+							 nextToken();
+							 break;
+							 
+			case STRING_LITERAL: s = new Source_StringLiteral(t, t.getText());
+								 nextToken();
 				 				 break;
+				 				 
 			case OP_AT: nextToken();
-						expression();
+						s = new Source_CommandLineParam(t, expression());
 						break;
+						
 			default: raiseException("source()\nExpected: A valid source entity\n" +
 			"Expected Token: IDENTIFIER / STRING_LITERAL / OP_AT\n");
 		}
+		return s;
 	}
 
 	//-------------------------------------------------------------------------
@@ -237,11 +263,13 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void sourceSinkDeclaration() throws SyntaxException {
-		sourceSinkType();
+	Declaration sourceSinkDeclaration() throws SyntaxException {
+		Token type = sourceSinkType();
+		Token ident = t;
 		checkKind(Kind.IDENTIFIER, "sourceSinkDeclaration()\nExpected: Identifier in source sink declaration \n");
 		checkKind(Kind.OP_ASSIGN, "sourceSinkDeclaration()\nExpected: Assignment operator\n");
-		source();
+		Source src = source();
+		return new Declaration_SourceSink(t, type, ident, src);
 	}
 
 	/**
@@ -249,10 +277,12 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void sourceSinkType() throws SyntaxException {
+	Token sourceSinkType() throws SyntaxException {
+		Token type = t;
 		if (!next(Kind.KW_url) && !next(Kind.KW_file))
 			raiseException("sourceSinkType()\nExpected: Valid source sink\nExpected Token: KW_url / KW_file \n");
 		nextToken();
+		return t;
 	}
 
 	//-------------------------------------------------------------------------
@@ -262,9 +292,10 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void statement() throws SyntaxException {
+	Statement statement() throws SyntaxException {
+		Token ident = t;
 		checkKind(Kind.IDENTIFIER, "statement()\nExpected: Identifier at the start of statement\n");
-		statementTail();
+		return statementTail(ident);
 	}
 
 	/**
@@ -272,19 +303,19 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void statementTail() throws SyntaxException {
+	Statement statementTail(Token ident) throws SyntaxException {
 		switch(t.kind) {
 			case OP_ASSIGN:
-			case LSQUARE: assignmentTail();
-			break;
-			case OP_RARROW: imageOutTail();
-			break;
-			case OP_LARROW: imageInTail();
-			break;
+			case LSQUARE: return assignmentTail(ident);
+			case OP_RARROW: Sink sink = imageOutTail();
+							return new Statement_Out(t, ident, sink);
+			case OP_LARROW: Source source = imageInTail();
+							return new Statement_In(t, ident, source);
 			default: raiseException("statementTail()\nExpected: Start of assignment" +
 			" tail / image in tail / image out tail\nExpected Token: OP_ASSIGN / " +
 			"LSQUARE / OP_RARROW / OP_LARROW\n");
 		}
+		return null;
 	}
 
 	/**
@@ -292,10 +323,11 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void assignmentTail() throws SyntaxException {
-		lhsTail();
+	Statement assignmentTail(Token ident) throws SyntaxException {
+		LHS lhs = lhsTail(ident);
 		checkKind(Kind.OP_ASSIGN, "assingmentTail()\nExpected: Assignment Operator\n");
-		expression();
+		Expression e = expression();
+		return new Statement_Assign(t, lhs, e);
 	}
 
 	/**
@@ -304,12 +336,14 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void lhsTail() throws SyntaxException {
+	LHS lhsTail(Token ident) throws SyntaxException {
+		Index i = null;
 		if (next(Kind.LSQUARE)) {
 			nextToken();
-			lhsSelector();
+			i = lhsSelector();
 			checkKind(Kind.RSQUARE, "lhsTail()\nExpected: Closing brackets for selector\n");
 		}
+		return new LHS(t, ident, i);
 	}
 
 	/**
@@ -317,10 +351,11 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void lhsSelector() throws SyntaxException {
+	Index lhsSelector() throws SyntaxException {
 		checkKind(Kind.LSQUARE, "lhsSelector()\nExpected: Opening brackets\n");
-		selectorBody();
+		Index i = selectorBody();
 		checkKind(Kind.RSQUARE, "lhsSelector()\nExpected: Closing brackets\n");
+		return i;
 	}
 
 	/**
@@ -329,15 +364,14 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void selectorBody() throws SyntaxException {
+	Index selectorBody() throws SyntaxException {
 		switch(t.kind) {
-		case KW_x:  xySelector();
-		break;
-		case KW_r: raSelector();
-		break;
-		default: raiseException("selectorBody()\nExpected: Start of xy / ra" +
-		" selector\nExpected Token: KW_x / KW_r\n");
+		case KW_x:  return xySelector();
+		case KW_r:  return raSelector();
+		default:    raiseException("selectorBody()\nExpected: Start of xy / ra" +
+					" selector\nExpected Token: KW_x / KW_r\n");
 		}
+		return null;
 	}
 
 	/**
@@ -345,10 +379,23 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void xySelector() throws SyntaxException {
-		checkKind(Kind.KW_x, "xySelector()\nExpected: Start of xy selector\n");
+	Index xySelector() throws SyntaxException {
+		//TODO:Changed here
+		Expression e1 = null, e2 = null;
+		if (!next(Kind.KW_x))
+			raiseException("xySelector()\nExpected: Start of xy selector\n");
+		else
+			e1 = new Expression_PredefinedName(t, t.kind);
+		nextToken();
+		
 		checkKind(Kind.COMMA, "xySelector()\nExpected: Comma inside xy selector\n");
-		checkKind(Kind.KW_y, "xySelector()\nExpected: End of xy selector\n");
+		
+		if (!next(Kind.KW_y))
+			raiseException("xySelector()\nExpected: End of xy selector\n");
+		else
+			e2 = new Expression_PredefinedName(t, t.kind);
+		nextToken();
+		return new Index(t, e1, e2);
 	}
 
 	/**
@@ -356,10 +403,23 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void raSelector() throws SyntaxException {
-		checkKind(Kind.KW_r, "raSelector()\nExpected: Start of ra selector\n");
+	Index raSelector() throws SyntaxException {
+		//TODO: Changed here
+		Expression e1 = null, e2 = null;
+		if (!next(Kind.KW_r))
+			raiseException("raSelector()\nExpected: Start of ra selector\n");
+		else
+			e1 = new Expression_PredefinedName(t, t.kind);
+		nextToken();
+		
 		checkKind(Kind.COMMA, "raSelector()\nExpected: Comma inside ra selector\n");
-		checkKind(Kind.KW_A, "raSelector()\nExpected: End of ra selector\n");
+		
+		if (!next(Kind.KW_A))
+			raiseException("raSelector()\nExpected: End of ra selector\n");
+		else
+			e2 = new Expression_PredefinedName(t, t.kind);
+		nextToken();
+		return new Index(t, e1, e2);
 	}
 
 	//-------------------------------------------------------------------------
@@ -369,9 +429,9 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void imageInTail() throws SyntaxException {
+	Source imageInTail() throws SyntaxException {
 		checkKind(Kind.OP_LARROW, "imageInTail()\nExpected: Start of image in tail\n");
-		source();
+		return source();
 	}
 
 	/**
@@ -379,20 +439,26 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void imageOutTail() throws SyntaxException {
+	Sink imageOutTail() throws SyntaxException {
 		checkKind(Kind.OP_RARROW, "imageOutTail()\nExpected: Start of image out tail\n");
-		sink();
+		return sink();
 	}
-
+	
 	/**
 	 * Sink ::= IDENTIFIER | KW_SCREEN
 	 *
 	 * @throws SyntaxException
 	 */
-	void sink() throws SyntaxException {
-		if (!next(Kind.KW_SCREEN) && !next(Kind.IDENTIFIER))
+	Sink sink() throws SyntaxException {
+		Sink s = null;
+		if (next(Kind.KW_SCREEN))
+			s = new Sink_SCREEN(t);
+		else if (next(Kind.IDENTIFIER))
+			s = new Sink_Ident(t, t);
+		else
 			raiseException("sink()\nExpected: Valid sink\nExpected Token: KW_SCREEN / IDENTIFIER\n");
 		nextToken();
+		return s;
 	}
 
 	//-------------------------------------------------------------------------
@@ -404,11 +470,15 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void expression() throws SyntaxException {
-		orExpression();
+	//TODO
+	Expression expression() throws SyntaxException {
+		Expression base = orExpression();
 		if (next(Kind.OP_Q)) {
-			expressionTail();
+			Expression[] e = expressionTail();
+			return new Expression_Conditional(t, base, e[0], e[1]);
 		}
+		return base;
+		
 	}
 
 	/**
@@ -416,11 +486,12 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void expressionTail() throws SyntaxException {
+	Expression[] expressionTail() throws SyntaxException {
 		checkKind(Kind.OP_Q, "expressionTail()\nExpected: Ternary operator\n");
-		expression();
+		Expression e1 = expression();
 		checkKind(Kind.OP_COLON, "expressionTail()\nExpected: Separator inside ternary conditional\n");
-		expression();
+		Expression e2 = expression();
+		return new Expression[] {e1, e2};
 	}
 
 	/**
@@ -428,12 +499,16 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void orExpression() throws SyntaxException {
-		andExpression();
+	Expression orExpression() throws SyntaxException {
+		Expression o1 = andExpression();
 		while (next(Kind.OP_OR)) {
+			Token op = t;
 			nextToken();
-			andExpression();
+			Expression o2 = andExpression();
+			Expression binary = new Expression_Binary(t, o1, op, o2);
+			o1 = binary;
 		}
+		return o1;
 	}
 
 	/**
@@ -441,12 +516,16 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void andExpression() throws SyntaxException {
-		eqExpression();
+	Expression andExpression() throws SyntaxException {
+		Expression o1 = eqExpression();
 		while (next(Kind.OP_AND)) {
+			Token op = t;
 			nextToken();
-			eqExpression();
+			Expression o2 = eqExpression();
+			Expression binary = new Expression_Binary(t, o1, op, o2);
+			o1 = binary;
 		}
+		return o1;
 	}
 
 	/**
@@ -454,12 +533,16 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void eqExpression() throws SyntaxException {
-		relExpression();
+	Expression eqExpression() throws SyntaxException {
+		Expression o1 = relExpression();
 		while (next(Kind.OP_EQ) || next(Kind.OP_NEQ)) {
+			Token op = t;
 			nextToken();
-			relExpression();
+			Expression o2 = relExpression();
+			Expression binary = new Expression_Binary(t, o1, op, o2);
+			o1 = binary;
 		}
+		return o1;
 	}
 
 	/**
@@ -467,12 +550,16 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void relExpression() throws SyntaxException {
-		addExpression();
+	Expression relExpression() throws SyntaxException {
+		Expression o1 = addExpression();
 		while (next(Kind.OP_GT) || next(Kind.OP_LT) || next(Kind.OP_GE) || next(Kind.OP_LE)) {
+			Token op = t;
 			nextToken();
-			addExpression();
+			Expression o2 = addExpression();
+			Expression binary = new Expression_Binary(t, o1, op, o2);
+			o1 = binary;
 		}
+		return o1;
 	}
 
 	/**
@@ -480,12 +567,16 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void addExpression() throws SyntaxException {
-		mulExpression();
+	Expression addExpression() throws SyntaxException {
+		Expression o1 = mulExpression();
 		while (next(Kind.OP_PLUS) || next(Kind.OP_MINUS)) {
+			Token op = t;
 			nextToken();
-			mulExpression();
+			Expression o2 = mulExpression();
+			Expression binary = new Expression_Binary(t, o1, op, o2);
+			o1 = binary;
 		}
+		return o1;
 	}
 
 	/**
@@ -493,12 +584,16 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void mulExpression() throws SyntaxException {
-		unaryExpression();
+	Expression mulExpression() throws SyntaxException {
+		Expression o1 = unaryExpression();
 		while (next(Kind.OP_TIMES) || next(Kind.OP_DIV) || next(Kind.OP_MOD)) {
+			Token op = t;
 			nextToken();
-			unaryExpression();
+			Expression o2 = unaryExpression();
+			Expression binary = new Expression_Binary(t, o1, op, o2);
+			o1 = binary;
 		}
+		return o1;
 	}
 
 	//-------------------------------------------------------------------------
@@ -508,13 +603,13 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void unaryExpression() throws SyntaxException {
-
+	Expression unaryExpression() throws SyntaxException {
 		switch(t.kind) {
 			case OP_PLUS:
-			case OP_MINUS:  nextToken();
-							unaryExpression();
-							break;
+			case OP_MINUS:  Token op = t;
+							nextToken();
+							Expression ue = unaryExpression();
+							return new Expression_Unary(t, op, ue);
 			case OP_EXCL:
 			case INTEGER_LITERAL:
 			case LPAREN:
@@ -538,14 +633,14 @@ public class Parser {
 			case KW_A:
 			case KW_R:
 			case KW_DEF_X:
-			case KW_DEF_Y: unaryExpressionNotPlusOrMinus();
-									break;
+			case KW_DEF_Y: return unaryExpressionNotPlusOrMinus();
 			default: raiseException("unaryExpression()\nExpected: Start of unary expression" +
 			"\nExpected Token: OP_PLUS / OP_MINUS / OP_EXCL / INTEGER_LITERAL /" +
 			" LPAREN / KW_sin / KW_cos / KW_atan / KW_abs / KW_cart_x / KW_cart_y /" +
 			" KW_polar_a / KW_polar_r / IDENTIFIER / KW_x / KW_y / KW_r / KW_a / " +
 			"KW_X / KW_Y / KW_Z / KW_A / KW_R / KW_DEF_X / KW_DEF_Y / BOOLEAN_LITERAL\n");
 		}
+		return null;
 	}
 
 	/**
@@ -555,11 +650,12 @@ public class Parser {
 	*
 	* @throws SyntaxException
 	*/
-	void unaryExpressionNotPlusOrMinus() throws SyntaxException {
+	Expression unaryExpressionNotPlusOrMinus() throws SyntaxException {
 		switch(t.kind) {
-			case OP_EXCL:   nextToken();
-							unaryExpression();
-							break;
+			case OP_EXCL:   Token op = t;
+							nextToken();
+							Expression e1 = unaryExpression();
+							return new Expression_Unary(t, op, e1);
 			case INTEGER_LITERAL:
 			case LPAREN:
 			case KW_sin:
@@ -570,10 +666,8 @@ public class Parser {
 			case KW_cart_y:
 			case KW_polar_a:
 			case KW_polar_r:
-			case BOOLEAN_LITERAL: 	primary();
-									break;
-			case IDENTIFIER:    identOrPixelSelectorExpression();
-								break;
+			case BOOLEAN_LITERAL: return primary();
+			case IDENTIFIER: return identOrPixelSelectorExpression();
 			case KW_x:
 			case KW_y:
 			case KW_r:
@@ -583,9 +677,10 @@ public class Parser {
 			case KW_Z:
 			case KW_A:
 			case KW_R:
-			case KW_DEF_X:
-			case KW_DEF_Y:  nextToken();
-							break;
+			case KW_DEF_X: 
+			case KW_DEF_Y: Expression e2 = new Expression_PredefinedName(t, t.kind);
+						   nextToken();
+						   return e2;
 			default: raiseException("unaryExpressionNotPlusOrMinus()\nExpected: Start of" +
 			" unaryExpressionNotPlusOrMinus\nExpected Token: OP_EXCL / " +
 			"INTEGER_LITERAL / LPAREN / KW_sin / KW_cos / KW_atan / KW_abs / " +
@@ -593,6 +688,7 @@ public class Parser {
 			" KW_y / KW_r / KW_a / KW_X / KW_Y / KW_Z / KW_A / KW_R / KW_DEF_X / " +
 			"KW_DEF_Y / BOOLEAN_LITERAL\n");
 		}
+		return null;
 	}
 
 	/**
@@ -600,13 +696,17 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void primary() throws SyntaxException {
+	Expression primary() throws SyntaxException {
+		Expression e = null;
 		switch(t.kind) {
-			case INTEGER_LITERAL:
-			case BOOLEAN_LITERAL:	nextToken();
-														break;
+			case INTEGER_LITERAL:	e = new Expression_IntLit(t, t.intVal()); //TODO: Verify Int Value
+									nextToken();
+									break;
+			case BOOLEAN_LITERAL:	e = new Expression_BooleanLit(t, t.getText() == "true"); //TODO: Verify Boolean Value
+									nextToken();
+									break;
 			case LPAREN:    nextToken();
-							expression();
+							e = expression();
 							checkKind(Kind.RPAREN, "primary()\nExpected: Closing brackets\n");
 							break;
 			case KW_sin:
@@ -616,12 +716,13 @@ public class Parser {
 			case KW_cart_x:
 			case KW_cart_y:
 			case KW_polar_a:
-			case KW_polar_r:  functionApplication();
-								break;
+			case KW_polar_r:  e = functionApplication();
+							  break;
 			default: raiseException("primary()\nExpected: Start of primary\nExpected"+
 			" Token: INTEGER_LITERAL / LPAREN / KW_sin / KW_cos / KW_atan / KW_abs /"+
 			" KW_cart_x / KW_cart_y / KW_polar_a / KW_polar_r / BOOLEAN_LITERAL\n");
 		}
+		return e;
 	}
 
 	//-------------------------------------------------------------------------
@@ -631,9 +732,14 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void identOrPixelSelectorExpression() throws SyntaxException {
+	Expression identOrPixelSelectorExpression() throws SyntaxException {
+		Token ident = t;
 		checkKind(Kind.IDENTIFIER, "identOrPixelSelectorExpression()\nExpected: Start of identifier expression\n");
-		pixelTail();
+		Index index = pixelTail();
+		if (index == null)
+			return new Expression_Ident(t, ident);
+		else
+			return new Expression_PixelSelector(t, ident, index);
 	}
 
 	/**
@@ -642,12 +748,14 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void pixelTail() throws SyntaxException {
+	Index pixelTail() throws SyntaxException {
 		if (next(Kind.LSQUARE)) {
 			nextToken();
-			selector();
+			Index i = selector();
 			checkKind(Kind.RSQUARE, "pixelTail()\nExpected: Ending brackets \n");
+			return i;
 		}
+		return null;
 	}
 
 	/**
@@ -656,9 +764,9 @@ public class Parser {
 	*
 	* @throws SyntaxException
 	*/
-	void functionApplication() throws SyntaxException {
-		functionName();
-		functionTail();
+	Expression functionApplication() throws SyntaxException {
+		Kind kind = functionName();
+		return functionTail(kind);
 	}
 
 	/**
@@ -666,7 +774,7 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void functionName() throws SyntaxException {
+	Kind functionName() throws SyntaxException {
 		switch(t.kind) {
 			case KW_sin:
 			case KW_cos:
@@ -675,12 +783,14 @@ public class Parser {
 			case KW_cart_x:
 			case KW_cart_y:
 			case KW_polar_a:
-			case KW_polar_r: nextToken();
-							break;
+			case KW_polar_r: Kind k = t.kind;
+							nextToken();
+							return k;
 			default: raiseException("functionName()\nExpected: Start of function " +
 			"call\nExpected Token: KW_sin / KW_cos / KW_atan / KW_abs / KW_cart_x /" +
 			" KW_cart_y / KW_polar_a / KW_polar_r\n");
 		}
+		return null;
 	}
 
 	/**
@@ -689,18 +799,19 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void functionTail() throws SyntaxException {
+	Expression functionTail(Kind kind) throws SyntaxException {
 		switch(t.kind) {
 			case LPAREN: nextToken();
-							expression();
-							checkKind(Kind.RPAREN, "functionTail()\nExpected: Ending brackets\n");
-							break;
+						 Expression e = expression();
+						 checkKind(Kind.RPAREN, "functionTail()\nExpected: Ending brackets\n");
+						 return new Expression_FunctionAppWithExprArg(t, kind, e);
 			case LSQUARE: nextToken();
-							selector();
-							checkKind(Kind.RSQUARE, "functionTail()\nExpected: Ending brackets\n");
-							break;
+						  Index i = selector();
+						  checkKind(Kind.RSQUARE, "functionTail()\nExpected: Ending brackets\n");
+						  return new Expression_FunctionAppWithIndexArg(t, kind, i);
 			default: raiseException("functionTail()\nExpected: Starting brackets\nExpected Token: LPAREN / LSQUARE\n");
 		}
+		return null;
 	}
 
 	/**
@@ -708,16 +819,18 @@ public class Parser {
 	 *
 	 * @throws SyntaxException
 	 */
-	void selector() throws SyntaxException {
-		expression();
+	Index selector() throws SyntaxException {
+		Expression e1 = expression();
 		checkKind(Kind.COMMA, "selector()\nExpected: Comma inside selector\n");
-		expression();
+		Expression e2 = expression();
+		return new Index(t, e1, e2);
 	}
 	
 	//Functions to facilitate testing
 	void assignment() throws SyntaxException {
+		Token ident = t;
 		checkKind(Kind.IDENTIFIER, "assignment()\nExpected: Identifier for assignment\n");
-		assignmentTail();
+		assignmentTail(ident);
 	}
 	
 	void imageIn() throws SyntaxException {
