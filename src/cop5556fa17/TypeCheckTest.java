@@ -87,30 +87,141 @@ public class TypeCheckTest {
 		show(ast);
 	}
 
-
-
-	
-	/**
-	 * This test should pass with a fully implemented assignment
-	 * @throws Exception
-	 */
 	 @Test
-	 public void testDec1() throws Exception {
-	 String input = "prog int k = 42;";
-	 typeCheck(input);
+	 public void testImageDeclaration01() throws Exception {
+		 String input = "prog image myVar;";
+		 typeCheck(input);
+	 }
+
+	 @Test
+	 public void testImageDeclaration02() throws Exception {
+		 String input = "prog image [10, 10] myVar;";
+		 typeCheck(input);
 	 }
 	 
-	 /**
-	  * This program does not declare k. The TypeCheckVisitor should
-	  * throw a SemanticException in a fully implemented assignment.
-	  * @throws Exception
-	  */
 	 @Test
-	 public void testUndec() throws Exception {
-	 String input = "prog k = 42;";
-	 thrown.expect(SemanticException.class);
-	 typeCheck(input);
+	 public void testImageDeclaration03() throws Exception {
+		 String input = "prog image myVar <- \"string\";";
+		 typeCheck(input);
+		 
+	 }
+	 
+	 @Test
+	 public void testImageDeclaration04() throws Exception {
+		 String input = "prog image [10, true] myVar <- \"string\";";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testImageDeclaration05() throws Exception {
+		 String input = "prog image [false, true] myVar <- \"string\";";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 //-------------------------------------------------------------
+	 //TODO: Yet to check which ones should throw error
+	 
+	 @Test
+	 public void testSourceSinkDeclaration01() throws Exception {
+		 String input = "prog url myVar = \"hello\"";
+		 typeCheck(input);
 	 }
 
+	 @Test
+	 public void testSourceSinkDeclaration02() throws Exception {
+		 String input = "prog file myVar = \"hello\"";
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testSourceSinkDeclaration03() throws Exception {
+		 String input = "prog url myVar = @ (10 + 10)";
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testSourceSinkDeclaration04() throws Exception {
+		 String input = "prog file myVar = @ (10 + 10)";
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testSourceSinkDeclaration05() throws Exception {
+		 String input = "prog int var = 10; file myVar = var";
+		 typeCheck(input);
+	 }
 
-}
+	 @Test
+	 public void testSourceSinkDeclaration06() throws Exception {
+		 String input = "prog file var = \"homedir\"; file myVar = var";
+		 typeCheck(input);
+	 }
+	 
+	 //--------------------------------------------------------------
+	 
+	 @Test
+	 public void testVariableDeclaration01() throws Exception {
+		 String input = "prog int length = 100;";
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testVariableDeclaration02() throws Exception {
+		 String input = "prog int length = 0;";
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testVariableDeclaration03() throws Exception {
+		 String input = "prog boolean isEmpty = true;";
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testVariableDeclaration04() throws Exception {
+		 String input = "prog boolean isEmpty = false;";
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testVariableDeclaration05() throws Exception {
+		 String input = "prog int length = true;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testVariableDeclaration06() throws Exception {
+		 String input = "prog boolean isEmpty = 100;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 //---------------------------------------------------------------
+	 
+//
+//	/**
+//	 * This test should pass with a fully implemented assignment
+//	 * @throws Exception
+//	 */
+//	 @Test
+//	 public void testDec1() throws Exception {
+//	 String input = "prog int k = 42;";
+//	 typeCheck(input);
+//	 }
+//	 
+//	 /**
+//	  * This program does not declare k. The TypeCheckVisitor should
+//	  * throw a SemanticException in a fully implemented assignment.
+//	  * @throws Exception
+//	  */
+//	 @Test
+//	 public void testUndec() throws Exception {
+//	 String input = "prog k = 42;";
+//	 thrown.expect(SemanticException.class);
+//	 typeCheck(input);
+//	 }
+
+	 
+}	

@@ -1,10 +1,12 @@
 package cop5556fa17;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import cop5556fa17.Scanner.Token;
 import cop5556fa17.AST.ASTNode;
 import cop5556fa17.AST.ASTVisitor;
+import cop5556fa17.AST.Declaration;
 import cop5556fa17.AST.Declaration_Image;
 import cop5556fa17.AST.Declaration_SourceSink;
 import cop5556fa17.AST.Declaration_Variable;
@@ -32,23 +34,22 @@ import cop5556fa17.AST.Statement_Out;
 
 public class TypeCheckVisitor implements ASTVisitor {
 	
-//		private Map<String, ASTNode> symbolTable;
+	private Map<String, Declaration> symbolTable;
 
-		@SuppressWarnings("serial")
-		public static class SemanticException extends Exception {
-			Token t;
+	@SuppressWarnings("serial")
+	public static class SemanticException extends Exception {
+		Token t;
 
-			public SemanticException(Token t, String message) {
-				super("line " + t.line + " pos " + t.pos_in_line + ": "+  message);
-				this.t = t;
-			}
+		public SemanticException(Token t, String message) {
+			super("line " + t.line + " pos " + t.pos_in_line + ": "+  message);
+			this.t = t;
+		}
 
-		}		
-		
-//		public TypeCheckVisitor () {
-//			
-//		}
-
+	}		
+	
+	public TypeCheckVisitor () {
+		symbolTable = new HashMap<>();
+	}
 	
 	/**
 	 * The program name is only used for naming the class.  It does not rule out
@@ -68,8 +69,13 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitDeclaration_Variable(
 			Declaration_Variable declaration_Variable, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		if (symbolTable.containsKey(declaration_Variable.name))
+			throw new SemanticException(declaration_Variable.firstToken, "Identifier already declared before.");
+		symbolTable.put(declaration_Variable.name, declaration_Variable);
+		declaration_Variable.setType(TypeUtils.getType(declaration_Variable.firstToken));
+		if ((declaration_Variable.e != null) && (declaration_Variable.e.getType() != declaration_Variable.getType()))
+			throw new SemanticException(declaration_Variable.firstToken, "Expression Type does not match the Identifier Type.");
+		return arg;
 	}
 
 	@Override
@@ -111,8 +117,20 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitDeclaration_Image(Declaration_Image declaration_Image,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		if (symbolTable.containsKey(declaration_Image.name))
+			throw new SemanticException(declaration_Image.firstToken, "Identifier already declared before.");
+		symbolTable.put(declaration_Image.name, declaration_Image);
+		declaration_Image.setType(TypeUtils.Type.IMAGE);
+		if (declaration_Image.xSize != null) {
+			if (declaration_Image.ySize == null)
+				throw new SemanticException(declaration_Image.firstToken, "Ysize not defined.");
+			else {
+				if (declaration_Image.xSize.Type != TypeUtils.Type.INTEGER || declaration_Image.ySize.Type != TypeUtils.Type.INTEGER) {
+					throw new SemanticException(declaration_Image.firstToken, "Xsize and Ysize must have Integer Type.");
+				}
+			}
+		}	
+		return arg;
 	}
 
 	@Override
@@ -142,8 +160,13 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitDeclaration_SourceSink(
 			Declaration_SourceSink declaration_SourceSink, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		if (symbolTable.containsKey(declaration_SourceSink.name))
+			throw new SemanticException(declaration_SourceSink.firstToken, "Identifier already declared before.");
+		symbolTable.put(declaration_SourceSink.name, declaration_SourceSink);
+		declaration_SourceSink.setType(TypeUtils.getType(declaration_SourceSink.firstToken));
+		if (declaration_SourceSink.getType() != declaration_SourceSink.source.getType())
+			throw new SemanticException(declaration_SourceSink.firstToken, "Type of source and type specified do not match.");
+		return arg;
 	}
 
 	@Override

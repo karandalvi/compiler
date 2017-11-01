@@ -1,5 +1,6 @@
 package cop5556fa17.AST;
 
+import cop5556fa17.TypeUtils;
 import cop5556fa17.Scanner.Token;
 
 public class LHS extends ASTNode{
@@ -7,7 +8,9 @@ public class LHS extends ASTNode{
 	public final String name;
 	public final Index index;
 
-
+	public Declaration Declaration;
+	public TypeUtils.Type Type;
+	public boolean isCartesian; 
 
 	public LHS(Token firstToken, Token name, Index index) {
 		super(firstToken);
@@ -15,6 +18,30 @@ public class LHS extends ASTNode{
 		this.index = index;
 	}
 
+	public Declaration getDeclaration() {
+		return Declaration;
+	}
+
+	public void setDeclaration(Declaration declaration) {
+		Declaration = declaration;
+	}
+
+	public TypeUtils.Type getType() {
+		return Type;
+	}
+
+	public void setType(TypeUtils.Type type) {
+		Type = type;
+	}
+
+	public boolean isCartesian() {
+		return isCartesian;
+	}
+
+	public void setCartesian(boolean isCartesian) {
+		this.isCartesian = isCartesian;
+	}
+	
 	@Override
 	public Object visit(ASTVisitor v, Object arg) throws Exception {
 		return v.visitLHS(this,arg);
@@ -62,7 +89,4 @@ public class LHS extends ASTNode{
 		return builder.toString();
 	}
 
-
-	
-	
 }
