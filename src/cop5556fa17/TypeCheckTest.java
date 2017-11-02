@@ -87,141 +87,364 @@ public class TypeCheckTest {
 		show(ast);
 	}
 
+	@Test
+	 public void testImageDeclaration() throws Exception {
+		 String[] input = new String[] 
+				 {"prog image myVar;",
+				  "prog image [100, 200] myVar;",
+				  "prog image [0, 0] myVar;",
+				  "prog image [10, 60] myVar <- \"/dir/file.txt\";",
+				  "prog image [10, 50] myVar <- \"http://www.ufl.edu\";",
+				  "prog file data = \"/dir/file.txt\"; image [10, 50] myVar <- data;",
+				  "prog url data = \"http://www.ufl.edu\"; image [10, 50] myVar <- data;",
+				  "prog file data = \"/dir/file.txt\"; image [10, 50] myVar <- data;",
+				  "prog int data = 100; image [104, 0] myVar <- @ data;",
+				  "prog image [104, 0] myVar <- @ 100;"
+				 };
+		 
+		 for (String s: input)
+			 typeCheck(s);
+	 }
+	 
 	 @Test
 	 public void testImageDeclaration01() throws Exception {
-		 String input = "prog image myVar;";
-		 typeCheck(input);
-	 }
-
-	 @Test
-	 public void testImageDeclaration02() throws Exception {
-		 String input = "prog image [10, 10] myVar;";
-		 typeCheck(input);
-	 }
-	 
-	 @Test
-	 public void testImageDeclaration03() throws Exception {
-		 String input = "prog image myVar <- \"string\";";
-		 typeCheck(input);
-		 
-	 }
-	 
-	 @Test
-	 public void testImageDeclaration04() throws Exception {
-		 String input = "prog image [10, true] myVar <- \"string\";";
+		 String input = "prog image [10, true] myVar;";
 		 thrown.expect(SemanticException.class);
 		 typeCheck(input);
 	 }
 	 
 	 @Test
-	 public void testImageDeclaration05() throws Exception {
+	 public void testImageDeclaration02() throws Exception {
 		 String input = "prog image [false, true] myVar <- \"string\";";
 		 thrown.expect(SemanticException.class);
 		 typeCheck(input);
 	 }
 	 
-	 //-------------------------------------------------------------
-	 //TODO: Yet to check which ones should throw error
-	 
 	 @Test
-	 public void testSourceSinkDeclaration01() throws Exception {
-		 String input = "prog url myVar = \"hello\"";
+	 public void testImageDeclaration03() throws Exception {
+		 String input = "prog int myVar = 10; image myVar <- \"string\";";
+		 thrown.expect(SemanticException.class);
 		 typeCheck(input);
 	 }
 
+	 //-------------------------------------------------------------
+
+	 @Test
+	 public void testSourceSinkDeclaration() throws Exception {
+		 String[] input = new String[] 
+			{
+				"prog url myVar = \"http://www.google.com\";",
+				"prog file myVar = \"/dir/file.txt\";",
+				"prog url var = \"http://www.google.com\"; url myVar = var;",
+				"prog file var = \"homedir\"; file myVar = var;"
+			};
+		 for (String s: input)
+			 typeCheck(s);
+	 }
+	 
+	 @Test
+	 public void testSourceSinkDeclaration01() throws Exception {
+		 String input = "prog file myVar = @ 100 ;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
 	 @Test
 	 public void testSourceSinkDeclaration02() throws Exception {
-		 String input = "prog file myVar = \"hello\"";
+		 String input = "prog file myVar = @ x;";
+		 thrown.expect(SemanticException.class);
 		 typeCheck(input);
 	 }
 	 
 	 @Test
 	 public void testSourceSinkDeclaration03() throws Exception {
-		 String input = "prog url myVar = @ (10 + 10)";
+		 String input = "prog file myVar = var;";
+		 thrown.expect(SemanticException.class);
 		 typeCheck(input);
 	 }
 	 
 	 @Test
 	 public void testSourceSinkDeclaration04() throws Exception {
-		 String input = "prog file myVar = @ (10 + 10)";
-		 typeCheck(input);
-	 }
-	 
-	 @Test
-	 public void testSourceSinkDeclaration05() throws Exception {
-		 String input = "prog int var = 10; file myVar = var";
+		 String input = "prog int myVar; file myVar = \"file.txt\";";
+		 thrown.expect(SemanticException.class);
 		 typeCheck(input);
 	 }
 
-	 @Test
-	 public void testSourceSinkDeclaration06() throws Exception {
-		 String input = "prog file var = \"homedir\"; file myVar = var";
-		 typeCheck(input);
-	 }
 	 
 	 //--------------------------------------------------------------
+	 @Test
+	 public void testVariableDeclaration() throws Exception {
+		 String[] input = new String[] 
+			{
+				 "prog int length = 100;",
+				 "prog int length = 0;",
+				 "prog boolean isEmpty = true;",
+				 "prog boolean isEmpty = false;",
+				 "prog int len = (100 / 20) + 5;",
+				 "prog boolean gt = 100 > 80;",
+				 "prog boolean aa = true; boolean b = aa;",
+				 "prog int len = (100 / 20) + 5; int newlen = len / 2;",
+				 "prog int aa; int bb = aa;",
+				 "prog boolean TRUE = true; boolean empty = TRUE;"
+			};
+		 for (String s: input)
+			 typeCheck(s);
+	 }
 	 
 	 @Test
 	 public void testVariableDeclaration01() throws Exception {
-		 String input = "prog int length = 100;";
-		 typeCheck(input);
-	 }
-	 
-	 @Test
-	 public void testVariableDeclaration02() throws Exception {
-		 String input = "prog int length = 0;";
-		 typeCheck(input);
-	 }
-	 
-	 @Test
-	 public void testVariableDeclaration03() throws Exception {
-		 String input = "prog boolean isEmpty = true;";
-		 typeCheck(input);
-	 }
-	 
-	 @Test
-	 public void testVariableDeclaration04() throws Exception {
-		 String input = "prog boolean isEmpty = false;";
-		 typeCheck(input);
-	 }
-	 
-	 @Test
-	 public void testVariableDeclaration05() throws Exception {
 		 String input = "prog int length = true;";
 		 thrown.expect(SemanticException.class);
 		 typeCheck(input);
 	 }
 	 
 	 @Test
-	 public void testVariableDeclaration06() throws Exception {
+	 public void testVariableDeclaration02() throws Exception {
 		 String input = "prog boolean isEmpty = 100;";
 		 thrown.expect(SemanticException.class);
 		 typeCheck(input);
 	 }
+	 
+	 @Test
+	 public void testVariableDeclaration03() throws Exception {
+		 String input = "prog boolean aa = true; int bb = aa;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testVariableDeclaration04() throws Exception {
+		 String input = "prog int aa = 1; boolean bb = aa;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testVariableDeclaration05() throws Exception {
+		 String input = "prog int bb = bb;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testVariableDeclaration06() throws Exception {
+		 String input = "prog boolean bb = TRUE;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testVariableDeclaration07() throws Exception {
+		 String input = "prog int bb = 1; int bb = 10;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
 	 //---------------------------------------------------------------
 	 
-//
-//	/**
-//	 * This test should pass with a fully implemented assignment
-//	 * @throws Exception
-//	 */
-//	 @Test
-//	 public void testDec1() throws Exception {
-//	 String input = "prog int k = 42;";
-//	 typeCheck(input);
-//	 }
-//	 
-//	 /**
-//	  * This program does not declare k. The TypeCheckVisitor should
-//	  * throw a SemanticException in a fully implemented assignment.
-//	  * @throws Exception
-//	  */
-//	 @Test
-//	 public void testUndec() throws Exception {
-//	 String input = "prog k = 42;";
-//	 thrown.expect(SemanticException.class);
-//	 typeCheck(input);
-//	 }
+	 @Test
+	 public void testExpressions() throws Exception {
+		 String[] input = new String[] 
+			{
+				 "prog int v = x;",
+				 "prog int v = DEF_X;",
+				 "prog image [104, 0] v <- @ 100; int vv = v [1,1];",
+				 "prog int v = ((DEF_X + DEF_Y) / 10);",
+				 "prog int v = 1 + 2 - 3 / 4 * 5 % 6;",
+				 "prog int v = 1 + 5 % 6; int w = 10; boolean b = v == w;",
+				 "prog int var = 10; boolean isEmpty = (var > 15);",
+				 "prog int v = sin(90) + cos(45);",
+				 "prog boolean v = sin(90) <= cos(45);",
+				 "prog boolean v = !(!(!(true))) | true & false;",
+				 "prog boolean v = x != y;",
+				 "prog int v = 1 > 2 ? 1 : 2;",
+				 "prog boolean v = 1 > 2 ? true : false;",
+				 "prog boolean v=1>2; v=1<2; v=1>=2; v=1<=2;",
+				 "prog int v=0; v=+2; v=-5; boolean b = true|false;",
+				 "prog int v0=0; int v1=1; int v3 = v0 | v1; v3 = v0 & v1;",
+				 "prog int v = sin[r,a];"
+				 
+			};
+		 for (String s: input)
+			 typeCheck(s);
+	 }
+	 
+	 @Test
+	 public void testExpr01() throws Exception {
+		 String input = "prog int v = 100; int vv = v [1,1];";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testExpr02() throws Exception {
+		 String input = "prog int v = 1 > 2 ? 1 : true;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testExpr03() throws Exception {
+		 String input = "prog int v = 100 ? 1 : 2;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testExpr04() throws Exception {
+		 String input = "prog boolean v = !(!(!(true))) | true & false + 5;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	
+	 @Test
+	 public void testExpr05() throws Exception {
+		 String input = "prog int sum = 10 + true;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testExpr06() throws Exception {
+		 String input = "prog int var = 10; boolean isEmpty = true & false | true / var;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testExpr07() throws Exception {
+		 String input = "prog int var = sin(true);";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+
+	 
+	 @Test
+	 public void testSource01() throws Exception {
+		 String input = "prog file var = @ true;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testSource02() throws Exception {
+		 String input = "prog file var = @ 100;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 
+	 @Test
+	 public void testStatement() throws Exception {
+		 String[] input = new String[] 
+			{
+				 "prog int aa; aa [[x,y]] = 10;",
+				 "prog int aa; aa [[r,A]] = 10;",
+				 "prog boolean aa; aa [[r,A]] = 100 == 100;",
+				 "prog boolean aa; boolean bb = aa | true;",
+				 "prog boolean aa; boolean bb; boolean cc; boolean dd = aa | bb | cc;",
+				 "prog int aa = 10; int bb = 40; bb <- @aa;",
+				 "prog int bb = 40; bb <- @10;",
+				 "prog url var1 = \"http://www.google.com\"; url var2 = \"http://www.google.com\"; var2 <- var1;",
+				 "prog int aa; aa -> SCREEN;",
+				 "prog boolean aa; aa -> SCREEN;",
+				 "prog image aa; aa -> SCREEN;",
+				 "prog file bb = \"file.txt\"; image aa; aa -> bb;"
+			};
+		 for (String s: input)
+			 typeCheck(s);
+	 }
+	 
+	 @Test
+	 public void testStatement01() throws Exception {
+		 String input = "prog int aa; aa [[r,a]] = 10;";
+		 thrown.expect(SyntaxException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testStatement02() throws Exception {
+		 String input = "prog boolean aa; boolean bb; boolean dd = aa | bb | cc;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testStatement03() throws Exception {
+		 String input = "prog file var1 = \"google.com\"; url var2 = \"http://www.google.com\"; var2 <- var1;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testStatement04() throws Exception {
+		 String input = "prog file bb = \"file.txt\"; int aa; aa -> bb;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testStatement05() throws Exception {
+		 String input = "prog file bb = \"file.txt\"; boolean aa; aa -> bb;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testStatement06() throws Exception { 
+		 String input = "prog int aa = 0; boolean b = true; aa = b;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testStatement07() throws Exception { 
+		 String input = "prog url bb = \"http://file.com\"; image aa; aa -> bb;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testStatement08() throws Exception { 
+		 String input = "prog image aa; aa -> bb;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testStatement09() throws Exception { 
+		 String input = "prog bb <- @10;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testStatement10() throws Exception { 
+		 String input = "prog aa -> SCREEN;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	/**
+	 * This test should pass with a fully implemented assignment
+	 * @throws Exception
+	 */
+	 @Test
+	 public void testDec1() throws Exception {
+	 String input = "prog int k = 42;";
+	 typeCheck(input);
+	 }
+	 
+	 /**
+	  * This program does not declare k. The TypeCheckVisitor should
+	  * throw a SemanticException in a fully implemented assignment.
+	  * @throws Exception
+	  */
+	 @Test
+	 public void testUndec() throws Exception {
+	 String input = "prog k = 42;";
+	 thrown.expect(SemanticException.class);
+	 typeCheck(input);
+	 }
 
 	 
 }	
