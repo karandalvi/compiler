@@ -318,6 +318,12 @@ public class TypeCheckTest {
 		 typeCheck(input);
 	 }
 
+	 @Test
+	 public void testExpr08() throws Exception {
+		 String input = "prog int var = +true;";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
 	 
 	 @Test
 	 public void testSource01() throws Exception {
@@ -333,7 +339,31 @@ public class TypeCheckTest {
 		 typeCheck(input);
 	 }
 	 
+	 @Test
+	 public void testURL01() throws Exception {
+		 String input = "prog file var = \"google.com\";";
+		 typeCheck(input);
+	 }
 	 
+	 @Test
+	 public void testURL02() throws Exception {
+		 String input = "prog url var = \"http://google.com\";";
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testURL03() throws Exception {
+		 String input = "prog url var = \"google.com\";";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 }
+	 
+	 @Test
+	 public void testURL04() throws Exception {
+		 String input = "prog file var = \"http://google.com\";";
+		 thrown.expect(SemanticException.class);
+		 typeCheck(input);
+	 } 
 	 @Test
 	 public void testStatement() throws Exception {
 		 String[] input = new String[] 
