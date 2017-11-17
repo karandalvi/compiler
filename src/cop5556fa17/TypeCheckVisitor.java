@@ -394,14 +394,14 @@ public class TypeCheckVisitor implements ASTVisitor {
 		String name = si.name;
 		
 		visit(src);
-		
-		if (!symbolTable.containsKey(name))
-			throw new SemanticException(t, "Identifier not declared.");
-		
+//		Following lines commented for assignment 5		
+//		if (!symbolTable.containsKey(name))
+//			throw new SemanticException(t, "Identifier not declared.");
+
 		si.Declaration = symbolTable.get(name);
-		
-		if (si.Declaration.Type != src.Type)
-			throw new SemanticException(t, "Identifier and source type do not match.");
+
+//		if (si.Declaration.Type != src.Type)
+//			throw new SemanticException(t, "Identifier and source type do not match.");
 		
 		return arg;
 	}
