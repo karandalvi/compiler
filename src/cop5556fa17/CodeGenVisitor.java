@@ -174,7 +174,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		String fieldType = statement_Out.Declaration.Type == Type.INTEGER? "I" : "Z";
 		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
 		mv.visitFieldInsn(GETSTATIC, className, statement_Out.name, fieldType);
-		CodeGenUtils.genLogTOS(GRADE, mv, statement_Out.Declaration.Type); //TODO: Verify this
+		CodeGenUtils.genLogTOS(GRADE, mv, statement_Out.Declaration.Type); //TODO: Verify
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "("+fieldType+")V", false);
 		return null;
 		// TODO HW6 remaining cases
@@ -219,12 +219,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitStatement_Assign(Statement_Assign statement_Assign, Object arg) throws Exception {
 		//TODO  (see comment)
-		Statement_Assign s = statement_Assign;
-		String fieldName = s.lhs.name;
-		String fieldType = s.lhs.Declaration.Type == Type.INTEGER? "I" : "Z";
-		s.e.visit(this, arg);
-		String type = fieldType == "I" ? "java/lang/Integer" : "java/lang/Boolean";
-		mv.visitFieldInsn(PUTSTATIC, className, fieldName, fieldType);
+		statement_Assign.e.visit(this, arg);
+		statement_Assign.lhs.visit(this, arg);
 		return null;
 	}
 	
@@ -258,14 +254,14 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 			eb.e1.visit(this, arg);
 			mv.visitInsn(IREM); 
 			break;
-//		case OP_POWER:
-//			eb.e0.visit(this, arg);
-//			mv.visitInsn(I2D);
-//			eb.e1.visit(this, arg);
-//			mv.visitInsn(I2D);
-//			mv.visitMethodInsn(INVOKESTATIC, "java/lang/Math", "pow", "(DD)D", false);
-//			mv.visitInsn(D2I);
-//			break;
+		case OP_POWER:
+			eb.e0.visit(this, arg);
+			mv.visitInsn(I2D);
+			eb.e1.visit(this, arg);
+			mv.visitInsn(I2D);
+			mv.visitMethodInsn(INVOKESTATIC, "java/lang/Math", "pow", "(DD)D", false);
+			mv.visitInsn(D2I);
+			break;
 		case OP_NEQ:
 			eb.e0.visit(this, arg);
 			eb.e1.visit(this, arg);
@@ -447,8 +443,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitExpression_IntLit(Expression_IntLit expression_IntLit, Object arg) throws Exception {	
 		mv.visitLdcInsn(new Integer(expression_IntLit.value));
-		if (arg == null)
-			CodeGenUtils.genLogTOS(GRADE, mv, Type.INTEGER);
+		CodeGenUtils.genLogTOS(GRADE, mv, Type.INTEGER);
 		return null;
 	}
 
@@ -480,8 +475,9 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	 */
 	@Override
 	public Object visitLHS(LHS lhs, Object arg) throws Exception {
-		//TODO  (see comment)
-		throw new UnsupportedOperationException();
+		String desc = lhs.Declaration.Type == Type.INTEGER? "I" : "Z";
+		mv.visitFieldInsn(PUTSTATIC, className, lhs.name, desc);
+		return null;
 	}
 	
 
@@ -500,8 +496,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitExpression_BooleanLit(Expression_BooleanLit expression_BooleanLit, Object arg) throws Exception {
 		mv.visitLdcInsn(new Boolean(expression_BooleanLit.value));
-		if (arg == null)
-			CodeGenUtils.genLogTOS(GRADE, mv, Type.BOOLEAN);
+		
+		CodeGenUtils.genLogTOS(GRADE, mv, Type.BOOLEAN);
 		return null;
 	}
 
@@ -512,8 +508,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		//TODO: Works only for Int and Boolean for Assignment 5
 		String desc = (ei.Type == Type.INTEGER)? "I" : "Z";
 		mv.visitFieldInsn(GETSTATIC, className, ei.name, desc);
-		if (arg == null)
-			CodeGenUtils.genLogTOS(GRADE, mv, expression_Ident.getType());
+		CodeGenUtils.genLogTOS(GRADE, mv, expression_Ident.getType());
 		return null;
 	}
 
