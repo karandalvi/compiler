@@ -417,7 +417,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 		visit(l);
 		visit(e);
 		
-		if (l.Type != e.Type)
+		//Image added for assignment 6
+		if (((l.Type != Type.IMAGE) && (l.Type != e.Type)) || ((l.Type == Type.IMAGE) && (e.Type != Type.INTEGER)))
 			throw new SemanticException(t, "LHS and Expression type do not match.");
 		
 		sa.setCartesian(l.isCartesian);

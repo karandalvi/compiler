@@ -424,7 +424,8 @@ public class Parser {
 		
 		checkKind(Kind.COMMA, "raSelector()\nExpected: Comma inside ra selector\n");
 		
-		if (!next(Kind.KW_A))
+		//Following is a fix for Assignment 6
+		if (!next(Kind.KW_a))
 			raiseException("raSelector()\nExpected: End of ra selector\n");
 		else
 			e2 = new Expression_PredefinedName(t, t.kind);
