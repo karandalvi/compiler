@@ -963,7 +963,7 @@ import org.junit.Rule;
 		"h[[x,y]] = ! g[x,y]; \n"+
 		"h -> SCREEN; \n";	
 		byte[] bytecode = genCode(input);		
-		String[] commandLineArgs = {imageFile1, imageFile2}; //create command line argument array to initialize params, none in this case		
+		String[] commandLineArgs = {imageFile1}; //create command line argument array to initialize params, none in this case		
 		runCode(prog, bytecode, commandLineArgs);	
 		show("Log:\n"+RuntimeLog.globalLog);
 		BufferedImage refImage0 = ImageSupport.readImage(imageFile1, 1024, 1024);
@@ -1019,8 +1019,6 @@ import org.junit.Rule;
 		keepFrame();
 	}
 	
-
-	
 	@Test
 	public void failed03() throws Exception {
 		String prog = "progImage";
@@ -1067,12 +1065,14 @@ import org.junit.Rule;
 				"\nimage h;" +
 				"\nh <- f;" +
 				"\nh -> SCREEN;";
-		byte[] bytecode = genCode(input);		
+		byte[] bytecode = genCode(input);
+		//paste a new file name path in arg @1
 		String[] commandLineArgs = {imageFile1, "/home/karandalvi/Desktop/newFile.jpg"}; //create command line argument array to initialize params, none in this case		
 		runCode(prog, bytecode, commandLineArgs);	
 		show("Log:\n"+RuntimeLog.globalLog);
 		BufferedImage loggedImage0 = RuntimeLog.globalImageLog.get(0);
 		BufferedImage loggedImage1 = RuntimeLog.globalImageLog.get(1);
+		//paste same path here
 		BufferedImage img = ImageIO.read(new File("/home/karandalvi/Desktop/newFile.jpg")); 
 		for (int x=0; x <ImageSupport.getX(loggedImage0); x++) {
 			for (int y=0; y <ImageSupport.getY(loggedImage0); y++) {
@@ -1161,4 +1161,5 @@ import org.junit.Rule;
 		assertTrue(ImageSupport.compareImages(loggedImage,img));	
 		keepFrame();
 	}
+
 	}
