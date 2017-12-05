@@ -3,12 +3,15 @@
 	import static org.junit.Assert.*;
 	
 	import java.awt.image.BufferedImage;
-	import java.io.FileOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 	import java.io.IOException;
 	import java.io.OutputStream;
 	import java.lang.reflect.Method;
-	
-	import org.junit.Rule;
+
+import javax.imageio.ImageIO;
+
+import org.junit.Rule;
 	import org.junit.Test;
 	import org.junit.rules.ExpectedException;
 	
@@ -103,7 +106,7 @@
 		 * May be useful during development to delay closing frames displaying images 
 	     */
 		void sleepFor5() throws Exception {
-			Thread.sleep(1000);
+			Thread.sleep(5000);
 		}
 		
 		/** Blocks program until a key is pressed to the console.
@@ -949,4 +952,213 @@
 		assertEquals("false;",RuntimeLog.globalLog.toString());
 	}
 	
+	@Test
+	public void failed01() throws Exception {
+		String prog = "progImage";
+		String input = prog + 
+		" image [1024,1024] g; \n"+
+		"image [1024,1024] h; \n" +
+		"g <- @ 0; \n"+
+		"g -> SCREEN; \n"+
+		"h[[x,y]] = ! g[x,y]; \n"+
+		"h -> SCREEN; \n";	
+		byte[] bytecode = genCode(input);		
+		String[] commandLineArgs = {imageFile1, imageFile2}; //create command line argument array to initialize params, none in this case		
+		runCode(prog, bytecode, commandLineArgs);	
+		show("Log:\n"+RuntimeLog.globalLog);
+		BufferedImage refImage0 = ImageSupport.readImage(imageFile1, 1024, 1024);
+		BufferedImage loggedImage0 = RuntimeLog.globalImageLog.get(1);
+		for (int x=0; x<1024; x++) {
+			for (int y=0; y<1024; y++) {
+				int pixelRef = ImageSupport.getPixel(refImage0, x, y);
+				pixelRef = Z - pixelRef;
+				int pixel = ImageSupport.getPixel(loggedImage0, x, y);
+				assertEquals(pixelRef, pixel);
+			}
+		}
+		keepFrame();
+	}
+	
+	@Test
+	public void failed02() throws Exception {
+		String prog = "progImage";
+		String input = prog + 
+		" image[1024,1024] g;" + 
+		"image[1024,1024] h;" + 
+		"g <- @ 0;" +
+		"g -> SCREEN;" +
+		"h[[x,y]] = ! g[x,y];" +
+		"h -> SCREEN; " +
+		"image[1024,1024] average; " +
+		"average[[x,y]] = h[x,y]*3;" +
+		"average -> SCREEN;";
+		byte[] bytecode = genCode(input);		
+		String[] commandLineArgs = {imageFile1}; //create command line argument array to initialize params, none in this case		
+		runCode(prog, bytecode, commandLineArgs);	
+		show("Log:\n"+RuntimeLog.globalLog);
+		BufferedImage refImage0 = ImageSupport.readImage(imageFile1, 1024, 1024);
+		BufferedImage refImage1 = ImageSupport.makeImage(1024, 1024);
+		BufferedImage refImage2 = ImageSupport.makeImage(1024, 1024);
+		for (int x=0; x<1024; x++) {
+			for (int y=0; y<1024; y++) {
+				int pixelRef = ImageSupport.getPixel(refImage0, x, y);
+				ImageSupport.setPixel(pixelRef ^ Integer.MAX_VALUE, refImage1, x, y);
+				ImageSupport.setPixel((pixelRef ^ Integer.MAX_VALUE) * 3, refImage2, x, y);
+			}
+		}
+		BufferedImage loggedImage0 = RuntimeLog.globalImageLog.get(0);
+		BufferedImage loggedImage1 = RuntimeLog.globalImageLog.get(1);
+		BufferedImage loggedImage2 = RuntimeLog.globalImageLog.get(2);
+		for (int x=0; x<1024; x++) {
+			for (int y=0; y<1024; y++) {
+				assertEquals(ImageSupport.getPixel(refImage0, x, y), ImageSupport.getPixel(loggedImage0, x, y));
+				assertEquals(ImageSupport.getPixel(refImage1, x, y), ImageSupport.getPixel(loggedImage1, x, y));
+				assertEquals(ImageSupport.getPixel(refImage2, x, y), ImageSupport.getPixel(loggedImage2, x, y));
+			}
+		}
+		keepFrame();
+	}
+	
+
+	
+	@Test
+	public void failed03() throws Exception {
+		String prog = "progImage";
+		String input = prog + 
+				"\nimage[1024,1024] g;" +
+				"\nimage[1024,1024] h;" +
+				"\ng <- @ 0;" +
+				"\nfile f = @ 1;" +
+				"\ng -> SCREEN;" +
+				"\nh[[r,a]] = g[r,a];" +
+				"\nh -> SCREEN;" +
+				"\nh -> f;";
+		byte[] bytecode = genCode(input);		
+		//paste path of image2 in arg @1
+		String[] commandLineArgs = {imageFile1,  "/home/karandalvi/Desktop/sample.jpg"}; //create command line argument array to initialize params, none in this case		
+		runCode(prog, bytecode, commandLineArgs);	
+		show("Log:\n"+RuntimeLog.globalLog);
+		BufferedImage loggedImage0 = RuntimeLog.globalImageLog.get(0);
+		BufferedImage loggedImage1 = RuntimeLog.globalImageLog.get(1);
+		for (int x=0; x < 1024; x++) {
+			for (int y=0; y < 1024; y++) {
+				int r = (int) Math.hypot(x,y);
+				int a = (int) Math.toDegrees( Math.atan2(y, x));
+				double xx = r * Math.cos(Math.toRadians(a));
+				double yy =  r * Math.sin(Math.toRadians(a));
+				int pixelRef = ImageSupport.getPixel(loggedImage0, (int) xx, (int) yy);
+				assertEquals(pixelRef, ImageSupport.getPixel(loggedImage1, x, y));
+			}
+		}
+		BufferedImage img = ImageIO.read(new File(imageFile2)); 
+		assertTrue(ImageSupport.compareImages(loggedImage1,img));
+		keepFrame();
+	}
+	
+	@Test
+	public void failed04() throws Exception {
+		String prog = "progImage";
+		String input = prog + 
+				"\nimage g;" +
+				"\nfile f = @ 1;" + 
+				"\ng <- @ 0;" +
+				"\ng -> SCREEN;" +
+				"\ng -> f;" +
+				"\nimage h;" +
+				"\nh <- f;" +
+				"\nh -> SCREEN;";
+		byte[] bytecode = genCode(input);		
+		String[] commandLineArgs = {imageFile1, "/home/karandalvi/Desktop/newFile.jpg"}; //create command line argument array to initialize params, none in this case		
+		runCode(prog, bytecode, commandLineArgs);	
+		show("Log:\n"+RuntimeLog.globalLog);
+		BufferedImage loggedImage0 = RuntimeLog.globalImageLog.get(0);
+		BufferedImage loggedImage1 = RuntimeLog.globalImageLog.get(1);
+		BufferedImage img = ImageIO.read(new File("/home/karandalvi/Desktop/newFile.jpg")); 
+		for (int x=0; x <ImageSupport.getX(loggedImage0); x++) {
+			for (int y=0; y <ImageSupport.getY(loggedImage0); y++) {
+				assertEquals(ImageSupport.getPixel(loggedImage0, x, y), ImageSupport.getPixel(loggedImage1, x, y));
+			}
+		}
+		assertTrue(ImageSupport.compareImages(loggedImage0,img));
+		assertTrue(ImageSupport.compareImages(loggedImage1,img));
+		keepFrame();
+	}	
+	
+	@Test
+	public void prof12() throws Exception{
+		devel = false;
+		grade = true;
+		String prog = "imageGen3";
+		String input = prog
+				+"\nimage[1024,1024] g; "
+				+ "\nimage[1024,1024] h; "
+				+ "\ng <- @ 0; "
+				+ "\n file f = @ 1; "
+				+ "\ng -> SCREEN; "
+				+ "\nh[[r,a]] =  g[r,a];"
+				+ "h -> SCREEN; "
+				+ "\nh -> f;"
+				;
+		
+		byte[] bytecode = genCode(input);		
+		String[] commandLineArgs = {imageFile1, imageFile2}; 
+		runCode(prog, bytecode, commandLineArgs);	
+
+		BufferedImage loggedImage = RuntimeLog.globalImageLog.get(1);
+		BufferedImage img = ImageIO.read(new File(imageFile2)); 
+		assertTrue(ImageSupport.compareImages(loggedImage,img));
+		keepFrame();
+	}
+	
+	@Test
+	public void prof13() throws Exception{
+		devel = false;
+		grade = true;
+		String prog = "imageGen3";
+		String input = prog
+				+"\nimage[1024,1024] g; "
+				+ "\nimage[1024,1024] h; "
+				+ "\ng <- @ 0; "
+				+ "\n file f = @ 1; "
+				+ "\ng -> SCREEN; "
+				+ "\nh[[x,y]] =  g[x,y];"
+				+ "h -> SCREEN; "
+				+ "\nh -> f;"
+				;
+		
+		byte[] bytecode = genCode(input);		
+		String[] commandLineArgs = {imageFile1, imageFile2}; 
+		runCode(prog, bytecode, commandLineArgs);	
+
+		BufferedImage loggedImage = RuntimeLog.globalImageLog.get(1);
+		BufferedImage img = ImageSupport.readImage(imageFile2, 1024, 1024); 
+		assertTrue(ImageSupport.compareImages(loggedImage,img));
+		keepFrame();
+	}
+	
+	@Test
+	public void prof14() throws Exception{
+		devel = false;
+		grade = true;
+		String prog = "imageGen3";
+		String input = prog
+				+"\n image g; "
+				+ "\n file f = @ 1; "
+				+ "\ng <- @ 0;"
+				+ "\ng -> SCREEN;"
+				+ "\ng -> f;"
+				+ "\nimage h;"
+				+ "\nh <- f; "
+				+ "\nh -> SCREEN;"
+				;
+		
+		byte[] bytecode = genCode(input);		
+		String[] commandLineArgs = {imageFile1, imageFile2}; 
+		runCode(prog, bytecode, commandLineArgs);	
+
+		BufferedImage loggedImage = RuntimeLog.globalImageLog.get(1);
+		BufferedImage img = RuntimeLog.globalImageLog.get(0); 
+		assertTrue(ImageSupport.compareImages(loggedImage,img));	
+		keepFrame();
+	}
 	}

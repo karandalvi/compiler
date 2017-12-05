@@ -140,8 +140,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 		
 		symbolTable.put(name, ds);
 		ds.setType(TypeUtils.getType(t));
-		
-		if (ds.Type != src.Type)
+		//Assignment7
+		//if ((ds.Type != src.Type))
+		if ((src.Type != null) && (ds.Type != src.Type))
 			throw new SemanticException(t, "Type of source and type specified do not match. " + src.Type.toString());
 		return arg;
 	}
@@ -302,9 +303,12 @@ public class TypeCheckVisitor implements ASTVisitor {
 		
 		visit(paramNum);
 		
+		//Assignment7
 		cp.setType(paramNum.Type);
-		if (cp.Type != Type.INTEGER)
-			throw new SemanticException(t, "Command Line Param is not of Integer Type.");
+		cp.setType(null);
+		
+		if (paramNum.Type != Type.INTEGER)
+			throw new SemanticException(t, "Command Line Param Expression is not of Integer Type.");
 		
 		return arg;
 	}

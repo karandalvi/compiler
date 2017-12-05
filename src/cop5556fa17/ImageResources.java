@@ -2,8 +2,8 @@ package cop5556fa17;
 
 public interface ImageResources {
 
-	public final static String imageFile1 = "/cise/homes/kdalvi/simpsons.jpg";
-	public final static String imageFile2 = "/cise/homes/kdalvi/sample.jpg";
+	public final static String imageFile1 = "/home/karandalvi/Desktop/uf.jpg";
+	public final static String imageFile2 = "/home/karandalvi/Desktop/sample.jpg";
 	
 	public final static String imageURL1 = "file://\\" + imageFile1;
 	

@@ -279,7 +279,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	public Object visitStatement_In(Statement_In statement_In, Object arg) throws Exception {
 		// TODO (see comment )
 		Statement_In s = statement_In;
-		if (s.source.Type == Type.INTEGER) {
+		//if (s.source.Type == Type.INTEGER) {
+		if (s.source.Type == null) {
 			s.source.visit(this, arg); //command line param is now on top of stack
 			String desc = "";
 			if (s.Declaration.Type == Type.INTEGER) {
@@ -375,17 +376,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 				mv.visitLabel(l00);
 				mv.visitJumpInsn(GOTO, l11);
 				mv.visitLabel(l22);
-//				if (!statement_Assign.isCartesian()) {
-//					mv.visitVarInsn(ILOAD, x_slot);
-//					mv.visitVarInsn(ILOAD, y_slot);
-//					mv.visitMethodInsn(INVOKESTATIC, "cop5556fa17/RuntimeFunctions", "polar_r", "(II)I", false);
-//					mv.visitVarInsn(ISTORE, r_slot);
-//					mv.visitVarInsn(ILOAD, x_slot);
-//					mv.visitVarInsn(ILOAD, y_slot);
-//					mv.visitMethodInsn(INVOKESTATIC, "cop5556fa17/RuntimeFunctions", "polar_a", "(II)I", false);
-//					mv.visitVarInsn(ISTORE, a_slot);
-//				}
-				//---code
+				//--code
 				statement_Assign.e.visit(this, arg);
 				mv.visitFieldInsn(GETSTATIC, className, statement_Assign.lhs.name, "Ljava/awt/image/BufferedImage;");
 				mv.visitVarInsn(ILOAD, x_slot);
@@ -544,8 +535,12 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		}
 		else if (eu.op == Kind.OP_EXCL) {
 			eu.e.visit(this, null);
-			if (eu.e.Type == Type.INTEGER)
-				mv.visitInsn(INEG);
+			if (eu.e.Type == Type.INTEGER) {
+				//Assignment7 Fix
+				//mv.visitInsn(INEG);
+				mv.visitLdcInsn(Integer.MAX_VALUE);
+				mv.visitInsn(IXOR);
+			}
 			else {
 				mv.visitLdcInsn(new Boolean(true));
 				Label l1 = new Label();
